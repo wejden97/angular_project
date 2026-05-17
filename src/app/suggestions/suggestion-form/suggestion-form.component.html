@@ -1,5 +1,5 @@
 <div class="form-container">
-  <h2>Ajouter une suggestion</h2>
+  <h2>{{ isEditMode ? 'Modifier une suggestion' : 'Ajouter une suggestion' }}</h2>
 
   <form [formGroup]="suggestionForm" (ngSubmit)="submitSuggestion()">
     <div class="form-group">
@@ -42,6 +42,8 @@
       <input type="text" [value]="defaultStatus" readonly />
     </div>
 
-    <button type="submit" class="submit-btn" [disabled]="suggestionForm.invalid">Soumettre</button>
+    <button type="submit" class="submit-btn">
+      {{ isEditMode ? 'Modifier' : 'Soumettre' }}
+    </button>
   </form>
 </div>

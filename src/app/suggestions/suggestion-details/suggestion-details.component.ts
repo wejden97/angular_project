@@ -19,7 +19,7 @@ export class SuggestionDetailsComponent implements OnInit {
 
   ngOnInit(): void {
     this.ar.params.subscribe(params => {
-      const id = +params['id']; 
+      const id = +params['id'];
       this.loadSuggestion(id);
     });
   }
@@ -27,7 +27,7 @@ export class SuggestionDetailsComponent implements OnInit {
   loadSuggestion(id: number): void {
     this.suggestionService.getSuggestionById(id).subscribe({
       next: (data) => {
-        this.suggestion = data.suggestion;
+        this.suggestion = data.suggestion || data;
       },
       error: (error: any) => {
         console.error('Error loading suggestion:', error);

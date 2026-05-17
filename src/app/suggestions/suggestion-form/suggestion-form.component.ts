@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Suggestion } from '../suggestion';
 import { SuggestionService } from '../../services/suggestion.service';
 
@@ -11,6 +11,9 @@ import { SuggestionService } from '../../services/suggestion.service';
 })
 export class SuggestionFormComponent implements OnInit {
   suggestionForm!: FormGroup;
+  suggestionId!: number;
+  isEditMode: boolean = false;
+
   categories: string[] = [
     'Infrastructure et bâtiments',
     'Technologie et services numériques',
@@ -29,7 +32,8 @@ export class SuggestionFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private suggestionService: SuggestionService,
-    private router: Router
+    private router: Router,
+    private ar: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -39,11 +43,28 @@ export class SuggestionFormComponent implements OnInit {
         [
           Validators.required,
           Validators.minLength(5),
-          Validators.pattern('^[A-Z][a-zA-Z]*$')
+          Validators.pattern('^[A-Z][a-zA-Z ]*$')
         ]
       ],
       description: ['', [Validators.required, Validators.minLength(30)]],
-      category: ['', Validators.required]
+      category: ['', Validators.required],
+      date: [this.currentDate],
+      status: [this.defaultStatus],
+      nbLikes: [0]
+    });
+
+    this.ar.params.subscribe(params => {
+      if (params['id']) {
+        this.isEditMode = true;
+        this.suggestionId = +params['id'];
+
+        this.suggestionService.getSuggestionById(this.suggestionId).subscribe({
+          next: (data) => {
+            this.suggestionForm.patchValue(data.suggestion || data);
+          },
+          error: (error) => console.error('Erreur chargement suggestion', error)
+        });
+      }
     });
   }
 
@@ -60,13 +81,21 @@ export class SuggestionFormComponent implements OnInit {
   }
 
   submitSuggestion(): void {
-   
+    if (this.suggestionForm.invalid) {
+      this.suggestionForm.markAllAsTouched();
+      return;
+    }
 
-    
-  
-    this.suggestionService.addSuggestion(this.suggestionForm.value).subscribe({
-      next: () => this.router.navigate(['/suggestions']),
-      error: (error: any) => console.error('Erreur ajout suggestion', error)
-    });
+    if (this.isEditMode) {
+      this.suggestionService.updateSuggestion(this.suggestionId, this.suggestionForm.value).subscribe({
+        next: () => this.router.navigate(['/suggestions']),
+        error: (error: any) => console.error('Erreur modification suggestion', error)
+      });
+    } else {
+      this.suggestionService.addSuggestion(this.suggestionForm.value).subscribe({
+        next: () => this.router.navigate(['/suggestions']),
+        error: (error: any) => console.error('Erreur ajout suggestion', error)
+      });
+    }
   }
 }
